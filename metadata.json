@@ -1,0 +1,6 @@
+{
+  "name": "Portal Educacional - SEMED Manaus",
+  "description": "Sistema Integrado de Gestão Educacional da Prefeitura de Manaus e Secretaria Municipal de Educação.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
