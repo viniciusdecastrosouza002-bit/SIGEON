@@ -269,7 +269,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
             </div>
 
             {/* Acesso ao Sistema Title with Blue Lock Icon */}
-            <div className="mt-7 text-center">
+            <div className="mt-5 sm:mt-6 text-center">
               {/* Blue rounded Lock badge */}
               <div className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-[#0b4ea2] text-white shadow-md shadow-blue-900/20 mb-3">
                 <svg

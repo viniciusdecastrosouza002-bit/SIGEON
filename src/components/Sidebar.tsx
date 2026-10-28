@@ -190,9 +190,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!isCollapsed ? (
             <div className="flex items-center gap-3 overflow-hidden">
               <img
-                src="/assets/aistudio/image_205f329d.png"
-                alt="Brasão Prefeitura de Manaus"
-                className="h-10 w-auto object-contain shrink-0 drop-shadow-sm brightness-110"
+                src="/assets/aistudio/sigeon_icon.png"
+                alt="Logo SIGEON"
+                className="h-11 w-auto object-contain shrink-0 drop-shadow-sm"
               />
               <div className="flex flex-col leading-tight min-w-0">
                 <span className="text-sm font-extrabold tracking-wider text-white uppercase flex items-center gap-1.5">
@@ -210,10 +210,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
             /* Collapsed Brand View (Compact Icon) */
             <div className="w-full flex justify-center">
               <img
-                src="/assets/aistudio/image_7044ae04.png"
-                alt="Brasão Manaus"
-                className="h-8 w-auto object-contain drop-shadow-sm brightness-110"
-                title="SIGEON - Prefeitura de Manaus"
+                src="/assets/aistudio/sigeon_icon.png"
+                alt="Logo SIGEON"
+                className="h-9 w-auto object-contain drop-shadow-sm"
+                title="SIGEON - Sistema Integrado de Gestão Educacional"
               />
             </div>
           )}
