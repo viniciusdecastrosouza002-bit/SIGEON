@@ -56,7 +56,6 @@ import {
   DocumentosSuporteView, 
   FinanceiroIntegracoesView 
 } from './AdditionalModuleViews';
-import { RoleSwitcherModal } from './RoleSwitcherModal';
 import { getProfileById, ProfileDefinition, hasModuleAccess, canEditInModule } from '../config/rbacProfiles';
 
 interface DashboardProps {
@@ -65,9 +64,8 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
-  // Current Active User (allows instant profile testing)
-  const [currentUser, setCurrentUser] = useState<UserProfile>(user);
-  const [isRoleSwitcherOpen, setIsRoleSwitcherOpen] = useState<boolean>(false);
+  // Current Authenticated User
+  const [currentUser] = useState<UserProfile>(user);
   const activeProfile = getProfileById(currentUser.role);
 
   // Navigation State
@@ -429,7 +427,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
         onLogout={onLogout}
         isMobileOpen={isMobileNavOpen}
         onCloseMobile={() => setIsMobileNavOpen(false)}
-        onOpenRoleSwitcher={() => setIsRoleSwitcherOpen(true)}
       />
 
       {/* ======================================================== */}
@@ -470,18 +467,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </select>
               </div>
 
-              {/* Active Profile Pill with Quick Switcher Trigger */}
-              <button
-                type="button"
-                onClick={() => setIsRoleSwitcherOpen(true)}
-                className="flex items-center gap-1.5 sm:gap-2 bg-blue-50/80 hover:bg-blue-100 text-[#0b4ea2] border border-blue-200/80 py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0"
-                title="Clique para alternar entre os 17 perfis oficiais da SEMED"
+              {/* Active Profile Badge (Authenticated) */}
+              <div
+                className="flex items-center gap-1.5 sm:gap-2 bg-blue-50/80 text-[#0b4ea2] border border-blue-200/80 py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-bold shrink-0"
+                title={`Perfil Autenticado: ${activeProfile.name} (${activeProfile.category})`}
               >
                 <ShieldCheck className="w-3.5 h-3.5 text-[#0b4ea2]" />
                 <span className="hidden lg:inline text-slate-600 font-medium">Perfil:</span>
                 <span className="truncate max-w-[110px] xs:max-w-[140px] sm:max-w-none">{activeProfile.name}</span>
-                <span className="text-[10px] bg-blue-200/70 text-[#072d61] px-1.5 py-0.2 rounded font-mono hidden sm:inline">Trocar</span>
-              </button>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded font-medium hidden sm:inline">Ativo</span>
+              </div>
             </div>
 
             {/* Right Status Tag */}
@@ -570,10 +565,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsRoleSwitcherOpen(true)}
+                  onClick={() => onLogout()}
                   className="px-4 py-2 bg-[#0b4ea2] hover:bg-[#093e80] text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
                 >
-                  Alternar para Perfil com Permissão
+                  Efetuar Login com Outro Perfil
                 </button>
                 <button
                   type="button"
@@ -1380,17 +1375,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           {activeTab === 'administracao-sistema' && (
             <AdministracaoSistemaView 
               currentProfileId={currentUser.role}
-              onSwitchProfile={(p) => {
-                setCurrentUser({
-                  name: p.sampleUser.name,
-                  cpf: p.sampleUser.cpf,
-                  role: p.id as any,
-                  roleTitle: p.sampleUser.roleTitle,
-                  school: p.sampleUser.school,
-                  ddz: p.sampleUser.ddz,
-                  email: p.sampleUser.email,
-                });
-              }}
             />
           )}
 
@@ -2259,16 +2243,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <span>Versão SIGEON 1.0 (Outubro de 2026)</span>
           </div>
         </footer>
-
-        {/* Role Switcher Modal (17 Canonical Profiles) */}
-        <RoleSwitcherModal
-          isOpen={isRoleSwitcherOpen}
-          onClose={() => setIsRoleSwitcherOpen(false)}
-          currentRole={currentUser.role}
-          onSelectUser={(newUser) => {
-            setCurrentUser(newUser);
-          }}
-        />
 
       </div>
     </div>

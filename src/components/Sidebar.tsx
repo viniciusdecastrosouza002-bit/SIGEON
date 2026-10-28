@@ -34,7 +34,6 @@ export interface SidebarProps {
   onLogout: () => void;
   isMobileOpen: boolean;
   onCloseMobile: () => void;
-  onOpenRoleSwitcher?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -45,7 +44,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onLogout,
   isMobileOpen,
   onCloseMobile,
-  onOpenRoleSwitcher,
 }) => {
   const currentProfile = getProfileById(user.role);
   // Desktop collapsed state
@@ -415,21 +413,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 </button>
               </div>
 
-              {/* Quick Role Switcher Pill */}
-              {onOpenRoleSwitcher && (
-                <button
-                  type="button"
-                  onClick={onOpenRoleSwitcher}
-                  className="w-full py-1.5 px-2.5 rounded-xl bg-blue-500/15 hover:bg-blue-500/25 text-cyan-200 border border-blue-400/25 text-[10px] font-bold flex items-center justify-between transition-colors cursor-pointer shadow-xs"
-                  title="Alternar entre os 17 perfis oficiais para testar permissões"
-                >
-                  <div className="flex items-center gap-1.5 truncate">
-                    <ShieldIcon className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
-                    <span className="truncate">Perfil: {currentProfile.name}</span>
-                  </div>
-                  <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-blue-600/50 text-white font-mono shrink-0">Trocar</span>
-                </button>
-              )}
+              {/* Authenticated Profile Badge */}
+              <div
+                className="w-full py-1.5 px-2.5 rounded-xl bg-blue-500/15 text-cyan-200 border border-blue-400/25 text-[10px] font-bold flex items-center justify-between shadow-xs"
+                title={`Perfil Oficial Autenticado: ${currentProfile.name} (${currentProfile.category})`}
+              >
+                <div className="flex items-center gap-1.5 truncate">
+                  <ShieldIcon className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+                  <span className="truncate">Perfil: {currentProfile.name}</span>
+                </div>
+                <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-600/40 text-emerald-200 font-medium shrink-0">Ativo</span>
+              </div>
             </div>
           ) : (
             /* Collapsed User View (Compact) */
@@ -441,17 +435,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {getInitials(user.name)}
               </div>
 
-              {onOpenRoleSwitcher && (
-                <button
-                  type="button"
-                  onClick={onOpenRoleSwitcher}
-                  className="p-2 rounded-xl text-cyan-300 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                  title={`Perfil Ativo: ${currentProfile.name}. Clique para alternar perfil.`}
-                  aria-label="Alternar perfil"
-                >
-                  <ShieldIcon className="w-4 h-4" />
-                </button>
-              )}
+              <div
+                className="p-2 rounded-xl text-cyan-300"
+                title={`Perfil Ativo: ${currentProfile.name}`}
+              >
+                <ShieldIcon className="w-4 h-4" />
+              </div>
 
               <button
                 type="button"

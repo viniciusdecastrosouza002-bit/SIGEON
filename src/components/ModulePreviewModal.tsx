@@ -1,18 +1,16 @@
 import React from 'react';
-import { GraduationCap, Users, FileText, BarChart3, X, ArrowRight, Check } from 'lucide-react';
+import { GraduationCap, Users, FileText, BarChart3, X, Check, Lock } from 'lucide-react';
 
 export type ModuleType = 'alunos' | 'servidores' | 'gestao' | 'relatorios';
 
 interface ModulePreviewModalProps {
   module: ModuleType | null;
   onClose: () => void;
-  onSelectForLogin: (module: ModuleType) => void;
 }
 
 export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
   module,
   onClose,
-  onSelectForLogin,
 }) => {
   if (!module) return null;
 
@@ -29,7 +27,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
         'Histórico escolar e expedição de transferências com assinatura digital',
         'Acompanhamento de programas sociais e cartão estudante Manaus',
       ],
-      quickRole: 'Professor(a) ou Responsável',
+      authorizedRole: 'Professor(a) Regente ou Gestor(a)',
     },
     servidores: {
       title: 'Módulo Servidores',
@@ -43,7 +41,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
         'Progressão na carreira, cursos de formação continuada e capacitações',
         'Substituições docentes e registro de licenças',
       ],
-      quickRole: 'Secretário(a) SEMED / Recursos Humanos',
+      authorizedRole: 'Secretário(a) Escolar ou Gestor(a)',
     },
     gestao: {
       title: 'Módulo Gestão Escolar',
@@ -57,7 +55,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
         'Transporte escolar rodoviário e fluvial (lanchas para comunidades ribeirinhas)',
         'Inventário de patrimônio, salas climatizadas e laboratórios de informática',
       ],
-      quickRole: 'Gestor(a) Escolar / Diretor de Escola',
+      authorizedRole: 'Gestor(a) Escolar / Diretora',
     },
     relatorios: {
       title: 'Módulo Relatórios e Indicadores',
@@ -71,7 +69,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
         'Estatísticas de vagas e demanda por bairros de Manaus',
         'Relatórios gerenciais para prestação de contas do Fundeb e PNAE',
       ],
-      quickRole: 'Auditor(a) / Gabinete SEMED',
+      authorizedRole: 'Auditor(a) ou Assessor(a) Técnico',
     },
   }[module];
 
@@ -121,24 +119,24 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
             </ul>
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 pt-2 shrink-0">
+          {/* Access Requirement Notice */}
+          <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-slate-800">
+              <Lock className="w-4 h-4 text-[#0b4ea2] shrink-0" />
+              <span>Acesso Restrito: Autenticação Obrigatória</span>
+            </div>
+            <p className="text-slate-600 text-[11px] leading-relaxed">
+              O acesso a este bloco ({data.authorizedRole}) exige autenticação individual com CPF e senha de acesso no formulário de login do sistema.
+            </p>
+          </div>
+
+          <div className="flex items-center justify-end gap-2.5 pt-2 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer text-center"
+              className="px-5 py-2.5 text-xs font-semibold text-white bg-[#0b4ea2] hover:bg-[#093e80] rounded-xl transition-colors cursor-pointer"
             >
               Fechar
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                onSelectForLogin(module);
-                onClose();
-              }}
-              className="px-5 py-2.5 text-xs font-semibold text-white bg-[#0b4ea2] hover:bg-[#093e80] rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-            >
-              <span>Acessar {data.title}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

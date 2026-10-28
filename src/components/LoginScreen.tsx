@@ -17,9 +17,8 @@ import { ManausLogo } from './ManausLogo';
 import { SupportModal } from './SupportModal';
 import { PasswordResetModal } from './PasswordResetModal';
 import { ModulePreviewModal, ModuleType } from './ModulePreviewModal';
-import { RoleSwitcherModal } from './RoleSwitcherModal';
 import { UserProfile } from '../types';
-import { RBAC_PROFILES } from '../config/rbacProfiles';
+import { RBAC_PROFILES, validateCredentials } from '../config/rbacProfiles';
 
 interface LoginScreenProps {
   onLogin: (user: UserProfile) => void;
@@ -35,7 +34,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
   // Modals state
   const [isSupportOpen, setIsSupportOpen] = useState(false);
   const [isResetOpen, setIsResetOpen] = useState(false);
-  const [isRolePickerOpen, setIsRolePickerOpen] = useState(false);
   const [activeModule, setActiveModule] = useState<ModuleType | null>(null);
 
   // CPF formatter
@@ -55,9 +53,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cpf && !senha) {
-      // Demo quick entry fallback
-      doDemoLogin('gestor');
+
+    if (!cpf.trim() || !senha.trim()) {
+      setErrorMessage('Por favor, informe seu CPF e sua senha de acesso.');
       return;
     }
 
@@ -67,83 +65,34 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       return;
     }
 
-    if (!senha) {
-      setErrorMessage('Por favor, digite sua senha de acesso.');
-      return;
-    }
-
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
 
-      // Check if matches any of the canonical seeded profiles from TEORIA_67d50b79.pdf
-      const matchedProfile = RBAC_PROFILES.find(
-        (p) => p.sampleUser.cpf.replace(/\D/g, '') === cleanCpf
-      );
+      const validation = validateCredentials(cpf, senha);
 
-      if (matchedProfile) {
-        onLogin({
-          name: matchedProfile.sampleUser.name,
-          cpf: matchedProfile.sampleUser.cpf,
-          role: matchedProfile.id,
-          roleTitle: matchedProfile.sampleUser.roleTitle,
-          school: matchedProfile.sampleUser.school || 'E.M. Antonina Borges de Sá',
-          ddz: matchedProfile.sampleUser.ddz,
-          email: matchedProfile.sampleUser.email,
-        });
-      } else if (cleanCpf === '12345678900' || cleanCpf === '00000000000') {
-        // Fallback for demo
-        onLogin({
-          name: 'Profa. Dra. Francisca Ribeiro',
-          cpf: cpf,
-          role: 'gestor',
-          roleTitle: 'Gestora Escolar / Diretora',
-          school: 'E.M. Antonina Borges de Sá',
-          ddz: 'DDZ Leste II - SEMED Manaus',
-          email: 'francisca.ribeiro@semed.manaus.am.gov.br',
-        });
-      } else {
-        // Exact normative message required by page 4 of TEORIA_67d50b79.pdf
-        setErrorMessage('CPF NÃO ENCONTRADO. CONTATE A SECRETARIA DA SUA UNIDADE DE ENSINO.');
+      if (!validation.success || !validation.profile) {
+        if (validation.error === 'CPF_NOT_FOUND') {
+          // Exact normative message required by page 4 of TEORIA_67d50b79.pdf
+          setErrorMessage('CPF NÃO ENCONTRADO. CONTATE A SECRETARIA DA SUA UNIDADE DE ENSINO.');
+        } else if (validation.error === 'INVALID_PASSWORD') {
+          setErrorMessage('Senha incorreta. Verifique os dados digitados e tente novamente.');
+        } else {
+          setErrorMessage('Por favor, informe seu CPF e sua senha de acesso.');
+        }
+        return;
       }
-    }, 500);
-  };
 
-  const doDemoLogin = (role: 'gestor' | 'professor' | 'secretario') => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      if (role === 'professor') {
-        onLogin({
-          name: 'Prof. Carlos Eduardo Siqueira',
-          cpf: '168.995.350-09',
-          role: 'professor',
-          roleTitle: 'Professor(a) Regente (5º Ano A)',
-          school: 'E.M. Antonina Borges de Sá',
-          ddz: 'DDZ Leste II - SEMED Manaus',
-          email: 'carlos.siqueira@semed.manaus.am.gov.br',
-        });
-      } else if (role === 'secretario') {
-        onLogin({
-          name: 'Ana Cláudia Vasconcelos',
-          cpf: '390.533.447-05',
-          role: 'secretario',
-          roleTitle: 'Secretário(a) Escolar',
-          school: 'E.M. Antonina Borges de Sá',
-          ddz: 'DDZ Leste II - SEMED Manaus',
-          email: 'secretaria.antonina@semed.manaus.am.gov.br',
-        });
-      } else {
-        onLogin({
-          name: 'Gestor(a) Antonina Borges de Sá',
-          cpf: '529.982.247-25',
-          role: 'gestor',
-          roleTitle: 'Gestor(a) Escolar',
-          school: 'E.M. Antonina Borges de Sá',
-          ddz: 'DDZ Leste II - SEMED Manaus',
-          email: 'gestao.antonina@semed.manaus.am.gov.br',
-        });
-      }
+      const p = validation.profile;
+      onLogin({
+        name: p.sampleUser.name,
+        cpf: p.sampleUser.cpf,
+        role: p.id,
+        roleTitle: p.sampleUser.roleTitle,
+        school: p.sampleUser.school || 'E.M. Antonina Borges de Sá',
+        ddz: p.sampleUser.ddz,
+        email: p.sampleUser.email,
+      });
     }, 450);
   };
 
@@ -155,11 +104,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
       <ModulePreviewModal
         module={activeModule}
         onClose={() => setActiveModule(null)}
-        onSelectForLogin={(mod) => {
-          if (mod === 'alunos' || mod === 'gestao') doDemoLogin('gestor');
-          else if (mod === 'servidores') doDemoLogin('secretario');
-          else doDemoLogin('gestor');
-        }}
       />
 
       {/* Main Container */}
@@ -427,36 +371,18 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
                 )}
               </button>
 
-              {/* Simular Acesso com Perfil (17 Perfis) */}
-              <div className="pt-2 text-center space-y-2">
+              {/* Consultar Credenciais de Teste (17 Perfis) */}
+              {/* Options */}
+              <div className="pt-2 text-center">
                 <button
                   type="button"
-                  onClick={() => setIsRolePickerOpen(true)}
-                  className="w-full py-2.5 px-3 bg-blue-50/90 hover:bg-blue-100 text-[#0b4ea2] rounded-xl text-xs font-bold border border-blue-200 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+                  onClick={() => setIsResetOpen(true)}
+                  className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0b4ea2] hover:underline cursor-pointer transition-colors"
                 >
-                  <ShieldCheck className="w-4 h-4 text-[#0b4ea2]" />
-                  <span>Simular Acesso com Perfil (17 Perfis Oficiais)</span>
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>Esqueci minha senha</span>
                 </button>
-
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => setIsResetOpen(true)}
-                    className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-[#0b4ea2] hover:underline cursor-pointer transition-colors"
-                  >
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Esqueci minha senha</span>
-                  </button>
-                </div>
               </div>
-
-              {/* Role Switcher Modal for test access */}
-              <RoleSwitcherModal
-                isOpen={isRolePickerOpen}
-                onClose={() => setIsRolePickerOpen(false)}
-                currentRole="gestor"
-                onSelectUser={(u) => onLogin(u)}
-              />
 
               {/* Hairline Separator */}
               <div className="border-t border-slate-200 my-4" />

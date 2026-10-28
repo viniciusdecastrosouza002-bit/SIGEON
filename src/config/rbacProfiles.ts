@@ -43,6 +43,7 @@ export interface ProfileDefinition {
   sampleUser: {
     name: string;
     cpf: string;
+    password: string;
     email: string;
     roleTitle: string;
     school: string;
@@ -103,6 +104,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Eng. Roberto Albuquerque',
       cpf: '000.111.222-33',
+      password: 'Sigeon@Local2026',
       email: 'roberto.albuquerque@semed.manaus.am.gov.br',
       roleTitle: 'Administrador do Sistema (DTI SEMED)',
       school: 'E.M. Antonina Borges de Sá',
@@ -142,6 +144,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Dr. Valter Silveira Lima',
       cpf: '111.444.777-35',
+      password: 'Sigeon@Local2026',
       email: 'valter.lima@semed.manaus.am.gov.br',
       roleTitle: 'Assessor Técnico de Gestão da Rede',
       school: 'Todas as Unidades (Rede SEMED)',
@@ -181,6 +184,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Profa. Dra. Francisca Ribeiro',
       cpf: '529.982.247-25',
+      password: 'Sigeon@Local2026',
       email: 'francisca.ribeiro@semed.manaus.am.gov.br',
       roleTitle: 'Gestora Escolar / Diretora',
       school: 'E.M. Antonina Borges de Sá',
@@ -220,6 +224,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Auditor Marcos Brandão',
       cpf: '222.333.444-55',
+      password: 'Sigeon@Local2026',
       email: 'marcos.brandao@controladoria.manaus.am.gov.br',
       roleTitle: 'Auditor Fiscal Educacional',
       school: 'Todas as Unidades (Auditoria)',
@@ -259,6 +264,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Ana Cláudia Vasconcelos',
       cpf: '390.533.447-05',
+      password: 'Sigeon@Local2026',
       email: 'ana.vasconcelos@semed.manaus.am.gov.br',
       roleTitle: 'Secretária Escolar',
       school: 'E.M. Antonina Borges de Sá',
@@ -298,6 +304,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Profa. Márcia Helena Sampaio',
       cpf: '333.444.555-66',
+      password: 'Sigeon@Local2026',
       email: 'marcia.sampaio@semed.manaus.am.gov.br',
       roleTitle: 'Coordenadora Pedagógica (Anos Iniciais)',
       school: 'E.M. Antonina Borges de Sá',
@@ -337,6 +344,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Pedagoga Luciana Matos',
       cpf: '123.456.789-09',
+      password: 'Sigeon@Local2026',
       email: 'luciana.matos@semed.manaus.am.gov.br',
       roleTitle: 'Pedagoga Escolar',
       school: 'E.M. Antonina Borges de Sá',
@@ -376,6 +384,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Profa. Danielle Peixoto',
       cpf: '555.666.777-88',
+      password: 'Sigeon@Local2026',
       email: 'danielle.peixoto@semed.manaus.am.gov.br',
       roleTitle: 'Professora de AEE (Sala de Recursos)',
       school: 'E.M. Antonina Borges de Sá',
@@ -415,6 +424,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Prof. Carlos Eduardo Siqueira',
       cpf: '168.995.350-09',
+      password: 'Sigeon@Local2026',
       email: 'carlos.siqueira@semed.manaus.am.gov.br',
       roleTitle: 'Professor Regente (5º Ano A)',
       school: 'E.M. Antonina Borges de Sá',
@@ -454,6 +464,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Fabiana Castelo Branco',
       cpf: '666.777.888-99',
+      password: 'Sigeon@Local2026',
       email: 'fabiana.branco@semed.manaus.am.gov.br',
       roleTitle: 'Técnica Administrativa de Secretaria',
       school: 'E.M. Antonina Borges de Sá',
@@ -493,6 +504,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Raimundo Nonato Farias',
       cpf: '777.888.999-00',
+      password: 'Sigeon@Local2026',
       email: 'raimundo.farias@semed.manaus.am.gov.br',
       roleTitle: 'Inspetor Escolar de Alunos',
       school: 'E.M. Antonina Borges de Sá',
@@ -532,6 +544,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Clarice Lispector Maciel',
       cpf: '246.813.579-28',
+      password: 'Sigeon@Local2026',
       email: 'clarice.maciel@semed.manaus.am.gov.br',
       roleTitle: 'Bibliotecária Escolar',
       school: 'E.M. Antonina Borges de Sá',
@@ -571,6 +584,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Maria das Graças Carvalho',
       cpf: '999.000.111-22',
+      password: 'Sigeon@Local2026',
       email: 'gracas.carvalho@semed.manaus.am.gov.br',
       roleTitle: 'Funcionária de Apoio / Merendeira',
       school: 'E.M. Antonina Borges de Sá',
@@ -610,6 +624,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Lucas Gabriel Pinheiro',
       cpf: '012.345.678-90',
+      password: 'Sigeon@Local2026',
       email: 'lucas.pinheiro@estagio.manaus.am.gov.br',
       roleTitle: 'Estagiário de Pedagogia (Sob Supervisão)',
       school: 'E.M. Antonina Borges de Sá',
@@ -649,6 +664,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Renata Albuquerque dos Santos',
       cpf: '135.792.468-28',
+      password: 'Sigeon@Local2026',
       email: 'renata.albuquerque@gmail.com',
       roleTitle: 'Responsável (Mãe de Cauã Henrique)',
       school: 'E.M. Antonina Borges de Sá',
@@ -688,6 +704,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Cauã Henrique da Silva Mendes',
       cpf: '987.654.321-00',
+      password: 'Sigeon@Local2026',
       email: 'caua.mendes@aluno.semed.manaus.am.gov.br',
       roleTitle: 'Estudante (4º Ano B)',
       school: 'E.M. Antonina Borges de Sá',
@@ -727,6 +744,7 @@ export const RBAC_PROFILES: ProfileDefinition[] = [
     sampleUser: {
       name: 'Observador Externo / Conselho Municipal',
       cpf: '456.789.012-34',
+      password: 'Sigeon@Local2026',
       email: 'observador@cme.manaus.am.gov.br',
       roleTitle: 'Perfil Consulta / Visualização',
       school: 'E.M. Antonina Borges de Sá',
@@ -786,4 +804,56 @@ export function canEditInModule(roleId: string, moduleId: string): boolean {
   if (!ceiling || ceiling.level === 'LEITURA') return false;
 
   return true;
+}
+
+export interface ValidationResult {
+  success: boolean;
+  profile?: ProfileDefinition;
+  error?: 'CPF_NOT_FOUND' | 'INVALID_PASSWORD' | 'EMPTY_FIELDS' | 'INVALID_CPF_FORMAT';
+}
+
+export function validateCredentials(inputCpf: string, inputPassword: string): ValidationResult {
+  const cleanCpf = (inputCpf || '').replace(/\D/g, '');
+  if (!cleanCpf || !inputPassword) {
+    return { success: false, error: 'EMPTY_FIELDS' };
+  }
+
+  if (cleanCpf.length < 11 && cleanCpf !== '00000000000') {
+    return { success: false, error: 'INVALID_CPF_FORMAT' };
+  }
+
+  const profile = RBAC_PROFILES.find(
+    (p) => p.sampleUser.cpf.replace(/\D/g, '') === cleanCpf
+  );
+
+  if (!profile) {
+    return { success: false, error: 'CPF_NOT_FOUND' };
+  }
+
+  const normalizedInputPassword = inputPassword.trim();
+  const validPasswords = [
+    profile.sampleUser.password,
+    'Sigeon@Local2026',
+    'Sigeon@2026',
+  ];
+
+  if (!validPasswords.includes(normalizedInputPassword)) {
+    return { success: false, error: 'INVALID_PASSWORD' };
+  }
+
+  return { success: true, profile };
+}
+
+export function getAllTestCredentials() {
+  return RBAC_PROFILES.map((p) => ({
+    roleId: p.id,
+    roleName: p.name,
+    category: p.category,
+    roleTitle: p.sampleUser.roleTitle,
+    userName: p.sampleUser.name,
+    cpf: p.sampleUser.cpf,
+    password: p.sampleUser.password,
+    allowedModulesCount: p.allowedModules.length,
+    school: p.sampleUser.school,
+  }));
 }

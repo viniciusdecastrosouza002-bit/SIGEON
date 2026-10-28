@@ -239,21 +239,10 @@ export const RbacProfilesSection: React.FC<RbacProfilesSectionProps> = ({
                         </div>
                       </div>
 
-                      {onSelectProfile && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedProfileId(p.id);
-                            onSelectProfile(p);
-                          }}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 ${
-                            currentProfileId === p.id
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-slate-100 text-slate-700 hover:bg-[#0b4ea2] hover:text-white'
-                          }`}
-                        >
-                          {currentProfileId === p.id ? '✓ Perfil Ativo' : 'Simular Perfil'}
-                        </button>
+                      {currentProfileId === p.id && (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-md shrink-0">
+                          ✓ Perfil Autenticado Atual
+                        </span>
                       )}
                     </div>
 
@@ -484,16 +473,6 @@ export const RbacProfilesSection: React.FC<RbacProfilesSectionProps> = ({
                   ))}
                 </select>
 
-                {onSelectProfile && (
-                  <button
-                    type="button"
-                    onClick={() => onSelectProfile(selectedProfile)}
-                    className="px-4 py-2 bg-[#0b4ea2] hover:bg-[#093e80] text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Ativar este Perfil</span>
-                  </button>
-                )}
               </div>
             </div>
 
@@ -506,8 +485,8 @@ export const RbacProfilesSection: React.FC<RbacProfilesSectionProps> = ({
                   <p className="text-xs text-slate-600 mt-0.5">Escopo territorial: <strong>{selectedProfile.scopeCategory}</strong></p>
                 </div>
 
-                <div className="text-xs font-mono text-slate-500 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
-                  Usuário de Teste: <strong>{selectedProfile.sampleUser.name}</strong>
+                <div className="text-xs text-slate-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200 font-medium">
+                  Perfil Oficial: <strong>{selectedProfile.sampleUser.roleTitle}</strong>
                 </div>
               </div>
 
