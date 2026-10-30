@@ -1,35 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
-  LayoutGrid, 
-  GraduationCap, 
-  ClipboardCheck, 
-  BookOpen, 
-  Users, 
-  School, 
-  MessagesSquare, 
-  Heart, 
-  Library, 
-  Building, 
-  Package, 
-  ShieldCheck, 
-  Settings, 
-  TrendingUp, 
-  Files, 
-  Landmark, 
   LogOut, 
   PanelLeftClose, 
   PanelLeft, 
   X,
-  Lock,
-  ShieldCheck as ShieldIcon
+  Search,
+  ChevronDown,
+  ChevronRight,
+  ShieldCheck as ShieldIcon,
+  School as SchoolIcon
 } from 'lucide-react';
 import { UserProfile } from '../types';
 import { getProfileById, hasModuleAccess } from '../config/rbacProfiles';
+import { 
+  INSTITUTIONAL_NAVIGATION, 
+  InstitutionalGroup, 
+  InstitutionalModule,
+  getInstitutionalModule
+} from '../config/navigationData';
 
 export interface SidebarProps {
   currentModule: string;
   currentSubItem?: string;
-  onSelectNavigation: (module: any, subItemId?: string) => void;
+  onSelectNavigation: (moduleId: string, subItemId?: string) => void;
   user: UserProfile;
   onLogout: () => void;
   isMobileOpen: boolean;
@@ -38,7 +31,7 @@ export interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({
   currentModule,
-  currentSubItem = 'default',
+  currentSubItem,
   onSelectNavigation,
   user,
   onLogout,
@@ -46,71 +39,71 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile,
 }) => {
   const currentProfile = getProfileById(user.role);
+  
   // Desktop collapsed state
   const [isCollapsed, setIsCollapsed] = useState<boolean>(false);
+  
+  // Search query for modules
+  const [navSearch, setNavSearch] = useState<string>('');
 
   // Logout confirmation modal
   const [showLogoutConfirm, setShowLogoutConfirm] = useState<boolean>(false);
 
-  // Top Standalone Item
-  const topItem = {
-    id: 'visao-geral',
-    label: 'Visão Geral',
-    icon: LayoutGrid,
+  // Group accordion state (all groups open by default for clear institutional visibility)
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
+    'inicio': true,
+    'gestao-academica': true,
+    'gestao-pedagogica': true,
+    'gestao-administrativa': true,
+    'infraestrutura-servicos': true,
+    'administracao-controle': true,
+  });
+
+  const toggleGroup = (groupId: string) => {
+    setOpenGroups((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }));
   };
 
-  // Navigation Groups matching the exact uploaded schema
-  const navigationGroups = [
-    {
-      id: 'gestao-escolar',
-      groupTitle: 'GESTÃO ESCOLAR',
-      items: [
-        { id: 'gestao-alunos', label: 'Gestão de Alunos', icon: GraduationCap },
-        { id: 'notas-frequencia', label: 'Notas e Frequência', icon: ClipboardCheck },
-        { id: 'gestao-pedagogica', label: 'Gestão Pedagógica', icon: BookOpen },
-        { id: 'equipe-escolar', label: 'Equipe Escolar', icon: Users },
-        { id: 'organizacao-escolar', label: 'Organização Escolar', icon: School },
-      ],
-    },
-    {
-      id: 'comunicacao-servicos',
-      groupTitle: 'COMUNICAÇÃO E SERVIÇOS',
-      items: [
-        { id: 'comunicacao-escolar', label: 'Comunicação Escolar', icon: MessagesSquare },
-        { id: 'atendimento-estudante', label: 'Atendimento ao Estudante', icon: Heart },
-        { id: 'biblioteca', label: 'Biblioteca', icon: Library },
-        { id: 'patrimonio-manutencao', label: 'Patrimônio e Manutenção', icon: Building },
-        { id: 'materiais-logistica', label: 'Materiais e Logística', icon: Package },
-        { id: 'portaria-visitantes', label: 'Portaria e Visitantes', icon: ShieldCheck },
-      ],
-    },
-    {
-      id: 'administracao-controle',
-      groupTitle: 'ADMINISTRAÇÃO E CONTROLE',
-      items: [
-        { id: 'administracao-sistema', label: 'Administração do Sistema', icon: Settings },
-        { id: 'paineis-relatorios', label: 'Painéis e Relatórios', icon: TrendingUp },
-        { id: 'documentos-suporte', label: 'Documentos e Suporte', icon: Files },
-        { id: 'financeiro-integracoes', label: 'Financeiro e Integrações', icon: Landmark },
-      ],
-    },
-  ];
+  // Helper to determine if a module is active, with alias fallback
+  const isItemActive = (id: string) => {
+    if (currentModule === id) return true;
+    const resolved = getInstitutionalModule(currentModule);
+    return resolved?.id === id;
+  };
 
-  const handleItemClick = (moduleId: string) => {
-    onSelectNavigation(moduleId);
+  // Filter groups and modules based on RBAC permissions and user search
+  const filteredNavigation = useMemo(() => {
+    const q = navSearch.trim().toLowerCase();
+
+    return INSTITUTIONAL_NAVIGATION.map((group) => {
+      // 1. Filter by role access
+      const authorizedModules = group.modules.filter((m) =>
+        hasModuleAccess(user.role, m.id)
+      );
+
+      // 2. Filter by search query (match module name or any internal subdivision)
+      const matchingModules = authorizedModules.filter((m) => {
+        if (!q) return true;
+        const matchName = m.name.toLowerCase().includes(q) || m.shortName.toLowerCase().includes(q);
+        const matchSub = m.subdivisions.some((s) => s.label.toLowerCase().includes(q));
+        const matchGroup = group.groupTitle.toLowerCase().includes(q);
+        return matchName || matchSub || matchGroup;
+      });
+
+      return {
+        ...group,
+        modules: matchingModules,
+      };
+    }).filter((group) => group.modules.length > 0);
+  }, [user.role, navSearch]);
+
+  const handleModuleClick = (moduleId: string, subItemId?: string) => {
+    onSelectNavigation(moduleId, subItemId);
     if (isMobileOpen) {
       onCloseMobile();
     }
-  };
-
-  // Helper to determine if an item is active, with backward compatibility
-  const isItemActive = (id: string) => {
-    if (currentModule === id) return true;
-    if (currentModule === 'alunos' && id === 'gestao-alunos') return true;
-    if (currentModule === 'servidores' && id === 'equipe-escolar') return true;
-    if (currentModule === 'gestao' && id === 'organizacao-escolar') return true;
-    if (currentModule === 'relatorios' && id === 'paineis-relatorios') return true;
-    return false;
   };
 
   const getInitials = (fullName: string) => {
@@ -127,14 +120,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {isMobileOpen && (
         <div 
           onClick={onCloseMobile}
-          className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-slate-950/75 backdrop-blur-xs z-50 lg:hidden transition-opacity duration-300"
           aria-hidden="true"
         />
       )}
 
       {/* Confirmation Modal for Logout */}
       {showLogoutConfirm && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-sm w-full p-6 text-center space-y-4">
             <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto">
               <LogOut className="w-6 h-6" />
@@ -171,20 +164,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* SIDEBAR MAIN CONTAINER */}
       <aside
         aria-label="Barra Lateral de Navegação Institucional"
-        className={`fixed lg:sticky top-0 left-0 h-screen z-50 flex flex-col justify-between bg-[#191b1f] border-r border-slate-800/80 text-slate-200 transition-all duration-300 ease-in-out select-none shadow-xl ${
+        className={`fixed lg:sticky top-0 left-0 h-screen z-50 flex flex-col justify-between bg-[#111622] border-r border-slate-800 text-slate-200 transition-all duration-300 ease-in-out select-none shadow-2xl ${
           // Mobile drawer slide
           isMobileOpen 
-            ? 'translate-x-0 w-[280px] max-w-[85vw]' 
+            ? 'translate-x-0 w-[295px] max-w-[88vw]' 
             : '-translate-x-full lg:translate-x-0'
         } ${
           // Desktop width (expanded vs collapsed)
-          isCollapsed ? 'lg:w-[76px]' : 'lg:w-[280px]'
+          isCollapsed ? 'lg:w-[76px]' : 'lg:w-[295px]'
         }`}
       >
         {/* ======================================================== */}
         {/* 1. TOP HEADER: LOGO, SIGEON BRAND & TOGGLE               */}
         {/* ======================================================== */}
-        <div className="h-18 px-4 flex items-center justify-between border-b border-slate-800/80 shrink-0 bg-[#141619]">
+        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/80 shrink-0 bg-[#0d121c]">
           
           {/* Expanded Brand View */}
           {!isCollapsed ? (
@@ -192,7 +185,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <img
                 src="/assets/aistudio/sigeon_icon.png"
                 alt="Logo SIGEON"
-                className="h-11 w-auto object-contain shrink-0 drop-shadow-sm"
+                className="h-10 w-auto object-contain shrink-0 drop-shadow-sm"
               />
               <div className="flex flex-col leading-tight min-w-0">
                 <span className="text-sm font-extrabold tracking-wider text-white uppercase flex items-center gap-1.5">
@@ -245,135 +238,128 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* ======================================================== */}
-        {/* 2. NAVIGATION LIST (SCROLLABLE INDEPENDENTLY)           */}
+        {/* 2. INSTITUTIONAL SEARCH BAR (Expanded view only)         */}
         {/* ======================================================== */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden py-3 px-3 space-y-4 scrollbar-thin scrollbar-thumb-slate-700/60 scrollbar-track-transparent">
-          
-          {/* Top Standalone Item: Visão Geral (Only if profile has authorization) */}
-          {hasModuleAccess(user.role, topItem.id) && (() => {
-            const TopIcon = topItem.icon;
-            const isTopActive = isItemActive(topItem.id);
-            return (
-              <div className="relative group/top">
+        {!isCollapsed && (
+          <div className="px-3 pt-3 pb-1 shrink-0">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                value={navSearch}
+                onChange={(e) => setNavSearch(e.target.value)}
+                placeholder="Pesquisar módulos ou funções..."
+                className="w-full bg-[#161c29] border border-slate-700/70 rounded-xl pl-8 pr-7 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-[#0b4ea2] focus:ring-1 focus:ring-[#0b4ea2]/30 transition-all"
+              />
+              {navSearch && (
                 <button
                   type="button"
-                  onClick={() => handleItemClick(topItem.id)}
-                  className={`w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer relative ${
-                    isTopActive
-                      ? 'bg-[#0b4ea2] text-white shadow-md shadow-blue-950/40 font-bold'
-                      : 'text-slate-200 hover:text-white hover:bg-white/5'
-                  } ${isCollapsed ? 'justify-center px-0' : 'gap-3'}`}
-                  title={isCollapsed ? topItem.label : undefined}
+                  onClick={() => setNavSearch('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-0.5"
                 >
-                  {isTopActive && (
-                    <span 
-                      className="absolute -left-3 top-1.5 bottom-1.5 w-1.5 bg-cyan-400 rounded-r-md shadow-sm" 
-                      aria-hidden="true"
-                    />
-                  )}
-                  <TopIcon className={`w-4.5 h-4.5 shrink-0 transition-transform ${
-                    isTopActive ? 'text-cyan-300 scale-105' : 'text-slate-300 group-hover/top:text-white'
-                  }`} />
-                  {!isCollapsed && (
-                    <span className="truncate tracking-wide text-left flex-1 font-semibold">
-                      {topItem.label}
-                    </span>
-                  )}
+                  <X className="w-3 h-3" />
                 </button>
+              )}
+            </div>
+          </div>
+        )}
 
-                {/* Collapsed Tooltip */}
-                {isCollapsed && (
-                  <div className="hidden group-hover/top:flex absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50 bg-[#25282d] text-white py-1.5 px-3 rounded-xl shadow-2xl border border-slate-700 whitespace-nowrap text-xs font-semibold pointer-events-none items-center gap-2 animate-in fade-in duration-150">
-                    <span>{topItem.label}</span>
+        {/* ======================================================== */}
+        {/* 3. NAVIGATION GROUPS ACCORDION (SCROLLABLE)              */}
+        {/* ======================================================== */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden py-2 px-3 space-y-3 scrollbar-thin scrollbar-thumb-slate-700/60 scrollbar-track-transparent">
+          {filteredNavigation.map((group) => {
+            const isOpen = openGroups[group.id] ?? true;
+
+            return (
+              <div key={group.id} className="space-y-1">
+                {/* Group Accordion Header */}
+                {!isCollapsed ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleGroup(group.id)}
+                    className="w-full px-2.5 py-1 text-[10px] font-bold text-slate-400 hover:text-slate-200 uppercase tracking-wider flex items-center justify-between group/grp transition-colors cursor-pointer"
+                  >
+                    <span className="truncate">{group.groupTitle}</span>
+                    <span className="text-slate-500 group-hover/grp:text-slate-300">
+                      {isOpen ? (
+                        <ChevronDown className="w-3.5 h-3.5" />
+                      ) : (
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      )}
+                    </span>
+                  </button>
+                ) : (
+                  <div className="w-full h-[1px] bg-slate-800/80 my-2" />
+                )}
+
+                {/* Modules in this Group */}
+                {(isCollapsed || isOpen) && (
+                  <div className="space-y-0.5 animate-in fade-in duration-150">
+                    {group.modules.map((m) => {
+                      const Icon = m.icon;
+                      const isActive = isItemActive(m.id);
+
+                      return (
+                        <div key={m.id} className="relative group/nav">
+                          <button
+                            type="button"
+                            onClick={() => handleModuleClick(m.id)}
+                            className={`w-full flex items-center px-3 py-2 rounded-xl text-xs transition-all duration-200 cursor-pointer relative ${
+                              isActive
+                                ? 'bg-[#0b4ea2] text-white shadow-md shadow-blue-950/40 font-bold'
+                                : 'text-slate-300 hover:text-white hover:bg-white/5 font-medium'
+                            } ${isCollapsed ? 'justify-center px-0' : 'gap-3'}`}
+                            title={isCollapsed ? m.name : undefined}
+                          >
+                            {/* Active Indicator Bar on Left Edge */}
+                            {isActive && (
+                              <span 
+                                className="absolute -left-3 top-1.5 bottom-1.5 w-1.5 bg-cyan-400 rounded-r-md shadow-sm" 
+                                aria-hidden="true"
+                              />
+                            )}
+
+                            <Icon className={`w-4.5 h-4.5 shrink-0 transition-transform ${
+                              isActive 
+                                ? 'text-cyan-300 scale-105' 
+                                : 'text-slate-400 group-hover/nav:text-white'
+                            }`} />
+
+                            {!isCollapsed && (
+                              <div className="min-w-0 flex-1 text-left flex items-center justify-between gap-1.5">
+                                <span className="truncate leading-tight">{m.name}</span>
+                              </div>
+                            )}
+                          </button>
+
+                          {/* Collapsed Tooltip Flyout on Hover */}
+                          {isCollapsed && (
+                            <div className="hidden group-hover/nav:flex absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50 bg-[#1e2536] text-white py-2 px-3 rounded-xl shadow-2xl border border-slate-700 whitespace-nowrap text-xs font-semibold pointer-events-none flex-col gap-0.5 animate-in fade-in duration-150">
+                              <span className="font-bold text-cyan-300">{m.name}</span>
+                              <span className="text-[10px] text-slate-400">{group.groupTitle}</span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             );
-          })()}
+          })}
 
-          {/* Divider after Visão Geral if visible and there are following groups */}
-          {hasModuleAccess(user.role, topItem.id) && (
-            <div className="w-full h-[1px] bg-slate-800/80 my-2" />
-          )}
-
-          {/* Navigation Groups: strictly filtered to authorized tabs only */}
-          {navigationGroups
-            .map((group) => ({
-              ...group,
-              items: group.items.filter((item) => hasModuleAccess(user.role, item.id)),
-            }))
-            .filter((group) => group.items.length > 0)
-            .map((group) => (
-            <div key={group.id} className="space-y-1">
-              {/* Group Title Header */}
-              {!isCollapsed ? (
-                <h4 className="px-3 pt-1 pb-1 text-[10px] font-bold text-slate-400/80 uppercase tracking-wider">
-                  {group.groupTitle}
-                </h4>
-              ) : (
-                <div className="w-full h-[1px] bg-slate-800/60 my-2" />
-              )}
-
-              {/* Group Items */}
-              <div className="space-y-0.5">
-                {group.items.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = isItemActive(item.id);
-
-                  return (
-                    <div key={item.id} className="relative group/nav">
-                      <button
-                        type="button"
-                        onClick={() => handleItemClick(item.id)}
-                        className={`w-full flex items-center px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer relative ${
-                          isActive
-                            ? 'bg-[#0b4ea2] text-white shadow-md shadow-blue-950/40 font-bold'
-                            : 'text-slate-300 hover:text-white hover:bg-white/5'
-                        } ${isCollapsed ? 'justify-center px-0' : 'gap-3'}`}
-                        title={isCollapsed ? item.label : undefined}
-                      >
-                        {/* Active Indicator Bar on Left Edge */}
-                        {isActive && (
-                          <span 
-                            className="absolute -left-3 top-1.5 bottom-1.5 w-1.5 bg-cyan-400 rounded-r-md shadow-sm" 
-                            aria-hidden="true"
-                          />
-                        )}
-
-                        <Icon className={`w-4 h-4 shrink-0 transition-transform ${
-                          isActive 
-                            ? 'text-cyan-300 scale-105' 
-                            : 'text-slate-400 group-hover/nav:text-white'
-                        }`} />
-
-                        {!isCollapsed && (
-                          <span className="truncate tracking-wide text-left flex-1 flex items-center justify-between gap-1.5">
-                            <span className="truncate">{item.label}</span>
-                          </span>
-                        )}
-                      </button>
-
-                      {/* Collapsed Tooltip Flyout on Hover */}
-                      {isCollapsed && (
-                        <div className="hidden group-hover/nav:flex absolute left-full ml-3 top-1/2 -translate-y-1/2 z-50 bg-[#25282d] text-white py-1.5 px-3 rounded-xl shadow-2xl border border-slate-700 whitespace-nowrap text-xs font-semibold pointer-events-none items-center gap-2 animate-in fade-in duration-150">
-                          <span>{item.label}</span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Divider after group */}
-              <div className="w-full h-[1px] bg-slate-800/80 my-2" />
+          {filteredNavigation.length === 0 && (
+            <div className="text-center py-6 px-2 text-xs text-slate-500">
+              Nenhum módulo encontrado para "{navSearch}".
             </div>
-          ))}
+          )}
         </div>
 
         {/* ======================================================== */}
-        {/* 3. FOOTER USER PROFILE & SESSION MANAGEMENT              */}
+        {/* 4. FOOTER: USER IDENTIFICATION, SCHOOL & LOGOUT          */}
         {/* ======================================================== */}
-        <div className="p-3 border-t border-slate-800/80 bg-[#141619] shrink-0">
+        <div className="p-3 border-t border-slate-800/80 bg-[#0d121c] shrink-0">
           {!isCollapsed ? (
             /* Expanded User Profile Card */
             <div className="space-y-2">
@@ -395,8 +381,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span className="text-[10px] text-slate-300 truncate mt-0.5">
                       {user.roleTitle}
                     </span>
-                    <span className="text-[9px] text-slate-400 truncate">
-                      {user.ddz}
+                    <span className="text-[9px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
+                      <SchoolIcon className="w-2.5 h-2.5 text-blue-400 shrink-0" />
+                      <span className="truncate">{user.school}</span>
                     </span>
                   </div>
                 </div>
@@ -406,7 +393,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   type="button"
                   onClick={() => setShowLogoutConfirm(true)}
                   className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer shrink-0"
-                  title="Sair do sistema SIGEAM"
+                  title="Encerrar sessão"
                   aria-label="Sair do sistema"
                 >
                   <LogOut className="w-4 h-4" />
@@ -416,13 +403,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               {/* Authenticated Profile Badge */}
               <div
                 className="w-full py-1.5 px-2.5 rounded-xl bg-blue-500/15 text-cyan-200 border border-blue-400/25 text-[10px] font-bold flex items-center justify-between shadow-xs"
-                title={`Perfil Oficial Autenticado: ${currentProfile.name} (${currentProfile.category})`}
+                title={`Perfil Autenticado: ${currentProfile.name} (${currentProfile.category})`}
               >
                 <div className="flex items-center gap-1.5 truncate">
                   <ShieldIcon className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
-                  <span className="truncate">Perfil: {currentProfile.name}</span>
+                  <span className="truncate">{currentProfile.name}</span>
                 </div>
-                <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-600/40 text-emerald-200 font-medium shrink-0">Ativo</span>
+                <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-emerald-600/40 text-emerald-200 font-medium shrink-0">
+                  {user.ddz}
+                </span>
               </div>
             </div>
           ) : (
@@ -430,7 +419,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div className="flex flex-col items-center gap-2 group/user relative">
               <div 
                 className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#0b4ea2] to-cyan-500 text-white font-extrabold text-xs flex items-center justify-center shadow-sm cursor-pointer"
-                title={`${user.name} (${user.roleTitle})`}
+                title={`${user.name} (${user.roleTitle}) - ${user.school}`}
               >
                 {getInitials(user.name)}
               </div>
@@ -453,10 +442,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </button>
 
               {/* Collapsed Hover Card for User */}
-              <div className="hidden group-hover/user:flex absolute left-full ml-3 bottom-0 z-50 bg-[#25282d] text-white p-3 rounded-xl shadow-2xl border border-slate-700 whitespace-nowrap text-xs font-medium pointer-events-none flex-col gap-1 animate-in fade-in duration-150">
+              <div className="hidden group-hover/user:flex absolute left-full ml-3 bottom-0 z-50 bg-[#1e2536] text-white p-3 rounded-xl shadow-2xl border border-slate-700 whitespace-nowrap text-xs font-medium pointer-events-none flex-col gap-1 animate-in fade-in duration-150">
                 <span className="font-bold text-white">{user.name}</span>
                 <span className="text-[10px] text-slate-300">{user.roleTitle}</span>
-                <span className="text-[9px] text-slate-400">{user.ddz}</span>
+                <span className="text-[9px] text-slate-400">{user.school} · {user.ddz}</span>
               </div>
             </div>
           )}

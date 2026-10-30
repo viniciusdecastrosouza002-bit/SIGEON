@@ -57,6 +57,13 @@ import {
   FinanceiroIntegracoesView 
 } from './AdditionalModuleViews';
 import { getProfileById, ProfileDefinition, hasModuleAccess, canEditInModule } from '../config/rbacProfiles';
+import { getInstitutionalModule, getGroupForModule } from '../config/navigationData';
+import { 
+  VidaEscolarSubdivisions, 
+  GestaoPessoasSubdivisions, 
+  OrganizacaoEscolarSubdivisions, 
+  RelatoriosIndicadoresSubdivisions 
+} from './SubdivisionViews';
 
 interface DashboardProps {
   user: UserProfile;
@@ -68,10 +75,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   const [currentUser] = useState<UserProfile>(user);
   const activeProfile = getProfileById(currentUser.role);
 
+  // Determine initial tab based on role permissions
+  const defaultTab = activeProfile?.allowedModules && activeProfile.allowedModules.length > 0
+    ? (activeProfile.allowedModules.includes('visao-geral') ? 'visao-geral' : activeProfile.allowedModules[0])
+    : 'visao-geral';
+
   // Navigation State
-  const [activeTab, setActiveTab] = useState<string>('visao-geral');
+  const [activeTab, setActiveTab] = useState<string>(defaultTab);
   const [activeSubItem, setActiveSubItem] = useState<string>('alunos-lista');
   const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
+
+  // Sync activeTab if current tab is not allowed for role
+  useEffect(() => {
+    if (activeProfile?.allowedModules && !activeProfile.allowedModules.includes(activeTab)) {
+      setActiveTab(activeProfile.allowedModules[0] || 'visao-geral');
+    }
+  }, [currentUser.role]);
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
@@ -285,6 +304,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     }
   }, [currentUser.role]);
 
+  // Institutional module and group metadata
+  const currentInstModule = getInstitutionalModule(activeTab);
+  const currentGroup = getGroupForModule(activeTab);
+  const currentSubdivisions = currentInstModule?.subdivisions || [];
+  const activeSubdivision = currentSubdivisions.find(s => s.id === activeSubItem) || currentSubdivisions[0];
+
   // Handling navigation from Sidebar or top pills
   const handleNavigation = (module: string, subItemId?: string) => {
     if (!hasModuleAccess(currentUser.role, module)) {
@@ -294,17 +319,22 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
     if (subItemId) {
       setActiveSubItem(subItemId);
     } else {
-      const defaultMap: Record<string, string> = {
-        'alunos': 'alunos-lista',
-        'gestao-alunos': 'alunos-lista',
-        'servidores': 'servidores-quadro',
-        'equipe-escolar': 'servidores-quadro',
-        'gestao': 'gestao-turmas',
-        'organizacao-escolar': 'gestao-turmas',
-        'relatorios': 'relatorios-ideb',
-        'paineis-relatorios': 'relatorios-ideb',
-      };
-      setActiveSubItem(defaultMap[module] || 'default');
+      const targetMod = getInstitutionalModule(module);
+      if (targetMod && targetMod.subdivisions.length > 0) {
+        setActiveSubItem(targetMod.subdivisions[0].id);
+      } else {
+        const defaultMap: Record<string, string> = {
+          'alunos': 'alunos-lista',
+          'gestao-alunos': 'cadastro-alunos',
+          'servidores': 'servidores-quadro',
+          'equipe-escolar': 'servidores',
+          'gestao': 'gestao-turmas',
+          'organizacao-escolar': 'turmas',
+          'relatorios': 'relatorios-ideb',
+          'paineis-relatorios': 'paineis-ideb',
+        };
+        setActiveSubItem(defaultMap[module] || 'default');
+      }
     }
   };
 
@@ -490,6 +520,41 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           </div>
         </header>
 
+        {/* Breadcrumb Navigation Bar */}
+        <nav aria-label="Caminho Institucional" className="w-full bg-slate-50 border-b border-slate-200/90 px-4 sm:px-6 lg:px-8 py-2.5 text-xs flex items-center gap-1.5 text-slate-500 overflow-x-auto shadow-2xs">
+          <button
+            type="button"
+            onClick={() => handleNavigation('visao-geral')}
+            className="hover:text-[#0b4ea2] hover:underline font-semibold text-slate-600 shrink-0 cursor-pointer"
+          >
+            Início
+          </button>
+          {currentGroup && currentGroup.id !== 'inicio' && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span className="text-slate-500 font-semibold shrink-0 uppercase tracking-wider text-[10px]">
+                {currentGroup.groupTitle}
+              </span>
+            </>
+          )}
+          {currentInstModule && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span className="font-bold text-slate-800 shrink-0">
+                {currentInstModule.name}
+              </span>
+            </>
+          )}
+          {activeSubdivision && activeTab !== 'visao-geral' && (
+            <>
+              <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <span className="font-semibold text-[#0b4ea2] bg-blue-100/70 px-2 py-0.5 rounded-md text-[11px] shrink-0">
+                {activeSubdivision.label}
+              </span>
+            </>
+          )}
+        </nav>
+
         {/* Hero Welcome Bar */}
         <section className="bg-gradient-to-r from-[#032c66] to-[#0b4ea2] text-white py-5 sm:py-6 px-4 sm:px-6 lg:px-8 shadow-inner">
           <div className="w-full flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -500,12 +565,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 <span className="bg-white/15 px-2 py-0.2 rounded text-cyan-200 font-bold">{activeProfile.name} ({currentUser.roleTitle})</span>
                 <span>·</span>
                 <span>Ano Letivo 2026</span>
+                {currentGroup && currentGroup.id !== 'inicio' && (
+                  <>
+                    <span>·</span>
+                    <span className="text-cyan-200 font-bold uppercase tracking-wider text-[10px]">{currentGroup.groupTitle}</span>
+                  </>
+                )}
               </div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                {selectedSchool}
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight flex items-center gap-2.5">
+                {currentInstModule ? currentInstModule.name : selectedSchool}
               </h1>
-              <p className="text-xs text-blue-100 mt-1 max-w-2xl">
-                Portal integrado de acompanhamento pedagógico, lançamento de notas, diário de frequência e administração escolar.
+              <p className="text-xs text-blue-100 mt-1 max-w-2xl leading-relaxed">
+                {currentInstModule ? currentInstModule.description : 'Portal integrado de acompanhamento pedagógico, lançamento de notas, diário de frequência e administração escolar.'}
               </p>
             </div>
 
@@ -533,6 +604,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
 
         {/* Main Dynamic View Content */}
         <main className="w-full px-4 sm:px-6 lg:px-8 py-6 flex-1 min-w-0">
+          
+          {/* Internal Subdivisions Horizontal Navigation Bar */}
+          {activeTab !== 'visao-geral' && currentSubdivisions.length > 0 && (
+            <div className="mb-6 bg-white rounded-2xl border border-slate-200 p-2 shadow-xs">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-thin">
+                {currentSubdivisions.map((sub) => {
+                  const isSubActive = activeSubItem === sub.id || (!activeSubItem && sub === currentSubdivisions[0]);
+                  return (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => setActiveSubItem(sub.id)}
+                      className={`px-3.5 py-2 rounded-xl text-xs whitespace-nowrap transition-all cursor-pointer flex items-center gap-1.5 shrink-0 ${
+                        isSubActive
+                          ? 'bg-[#0b4ea2] text-white shadow-xs font-bold'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium'
+                      }`}
+                      title={sub.description}
+                    >
+                      <span>{sub.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           
           {/* Access Restriction Guard for Vedado Modules */}
           {activeTab !== 'visao-geral' && activeTab !== 'administracao-sistema' && activeProfile.moduleCeilings[activeTab]?.level === 'VEDADO' ? (
@@ -597,7 +694,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <div className="space-y-6 animate-in fade-in duration-200">
               
               {/* SUBVIEW 1.1: LISTA DE ALUNOS & MATRÍCULA */}
-              {activeSubItem === 'alunos-lista' && (
+              {(activeSubItem === 'cadastro-alunos' || activeSubItem === 'alunos-lista' || !activeSubItem) && (
                 <div className="space-y-6">
                   {/* KPI Cards */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -906,6 +1003,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               )}
 
+              {/* OTHER VIDA ESCOLAR SUBDIVISIONS */}
+              {activeSubItem !== 'cadastro-alunos' && activeSubItem !== 'alunos-lista' && activeSubItem !== 'alunos-vagas' && activeSubItem !== 'alunos-frequencia' && activeSubItem && (
+                <VidaEscolarSubdivisions
+                  subdivisionId={activeSubItem}
+                  students={students}
+                  onOpenManageStudent={handleOpenManage}
+                  selectedSchool={selectedSchool}
+                />
+              )}
+
             </div>
           )}
 
@@ -913,14 +1020,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           {/* MODULE: NOTAS E FREQUÊNCIA                               */}
           {/* ======================================================== */}
           {activeTab === 'notas-frequencia' && (
-            <NotasFrequenciaView students={students} />
+            <NotasFrequenciaView students={students} userRole={currentUser.role} />
           )}
 
           {/* ======================================================== */}
           {/* MODULE: GESTÃO PEDAGÓGICA                                */}
           {/* ======================================================== */}
           {activeTab === 'gestao-pedagogica' && (
-            <GestaoPedagogicaView />
+            <GestaoPedagogicaView userRole={currentUser.role} />
           )}
 
           {/* ======================================================== */}
@@ -930,7 +1037,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
             <div className="space-y-6 animate-in fade-in duration-200">
               
               {/* SUBVIEW 2.1: QUADRO DOCENTE & SUBVIEW 2.3: LOTAÇÃO */}
-              {(activeSubItem === 'servidores-quadro' || activeSubItem === 'servidores-lotacao' || !activeSubItem) && (
+              {(activeSubItem === 'servidores' || activeSubItem === 'lotacoes' || activeSubItem === 'servidores-quadro' || activeSubItem === 'servidores-lotacao' || !activeSubItem) && (
                 <div className="space-y-6">
                   {/* Key Metrics Cards for Lotação de Servidores */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1201,6 +1308,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               )}
 
+              {/* OTHER GESTÃO DE PESSOAS SUBDIVISIONS */}
+              {activeSubItem !== 'servidores' && activeSubItem !== 'lotacoes' && activeSubItem !== 'servidores-quadro' && activeSubItem !== 'servidores-lotacao' && activeSubItem !== 'servidores-ponto' && activeSubItem && (
+                <GestaoPessoasSubdivisions
+                  subdivisionId={activeSubItem}
+                  teachers={teachers}
+                  selectedSchool={selectedSchool}
+                />
+              )}
+
             </div>
           )}
 
@@ -1287,41 +1403,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               )}
 
-              {/* SUBVIEW 3.3: TRANSPORTE ESCOLAR */}
-              {activeSubItem === 'gestao-transporte' && (
-                <div className="space-y-6">
-                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                    <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
-                      <div className="w-10 h-10 rounded-xl bg-sky-50 text-sky-700 flex items-center justify-center">
-                        <Ship className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-sm text-slate-800">Transporte Escolar Manaus (Fluvial & Terrestre)</h3>
-                        <p className="text-xs text-slate-500">Monitoramento diário de frotas escolares autorizadas pela SEMED</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                      <div className="p-4 rounded-xl bg-sky-50/70 border border-sky-200 space-y-2">
-                        <div className="flex items-center justify-between font-bold text-sky-950">
-                          <span className="flex items-center gap-1.5"><Bus className="w-4 h-4 text-sky-700" /> Ônibus Urbano Rota 04</span>
-                          <span className="text-emerald-700 text-[10px] px-2 py-0.5 bg-emerald-50 rounded-full border border-emerald-200">Operando Normalmente</span>
-                        </div>
-                        <p className="text-sky-800">Atende 140 estudantes dos bairros Coroado, Armando Mendes e São José Operário.</p>
-                        <span className="text-[11px] text-slate-500 block font-mono">Horários: 06:15 | 11:45 | 12:30 | 17:40</span>
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-sky-50/70 border border-sky-200 space-y-2">
-                        <div className="flex items-center justify-between font-bold text-sky-950">
-                          <span className="flex items-center gap-1.5"><Ship className="w-4 h-4 text-sky-700" /> Lancha Escolar Fluvial 02</span>
-                          <span className="text-emerald-700 text-[10px] px-2 py-0.5 bg-emerald-50 rounded-full border border-emerald-200">Em Trânsito no Rio Negro</span>
-                        </div>
-                        <p className="text-sky-800">Atende 45 estudantes ribeirinhos das comunidades do Rio Negro e Tarumã-Mirim.</p>
-                        <span className="text-[11px] text-slate-500 block font-mono">Condutor Habilitado Marinha: Raimundo Nonato</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+              {/* OTHER ORGANIZAÇÃO ESCOLAR SUBDIVISIONS */}
+              {activeSubItem !== 'gestao-turmas' && activeSubItem !== 'turmas' && activeSubItem !== 'gestao-merenda' && activeSubItem !== 'gestao-transporte' && activeSubItem && (
+                <OrganizacaoEscolarSubdivisions
+                  subdivisionId={activeSubItem}
+                  classes={classes}
+                  selectedSchool={selectedSchool}
+                />
               )}
 
             </div>
@@ -1476,6 +1564,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
                 </div>
               )}
 
+              {/* OTHER RELATÓRIOS E INDICADORES SUBDIVISIONS */}
+              {activeSubItem !== 'relatorios-ideb' && activeSubItem !== 'paineis-ideb' && activeSubItem !== 'relatorios-ddz' && activeSubItem !== 'relatorios-censo' && activeSubItem && (
+                <RelatoriosIndicadoresSubdivisions
+                  subdivisionId={activeSubItem}
+                />
+              )}
+
             </div>
           )}
 
@@ -1483,7 +1578,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
           {/* MODULE: DOCUMENTOS E SUPORTE                             */}
           {/* ======================================================== */}
           {activeTab === 'documentos-suporte' && (
-            <DocumentosSuporteView />
+            <DocumentosSuporteView userRole={currentUser.role} />
           )}
 
           {/* ======================================================== */}

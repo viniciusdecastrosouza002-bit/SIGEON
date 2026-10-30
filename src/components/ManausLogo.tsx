@@ -1,11 +1,10 @@
 import React from 'react';
 
 interface ManausLogoProps {
-  variant?: 'white' | 'color';
+  variant?: 'white' | 'color' | 'semed';
   size?: 'sm' | 'md' | 'lg';
-  showSubtitle?: boolean;
   className?: string;
-  useFullBanner?: boolean;
+  showSubtitle?: boolean;
 }
 
 export const ManausLogo: React.FC<ManausLogoProps> = ({
@@ -13,16 +12,26 @@ export const ManausLogo: React.FC<ManausLogoProps> = ({
   size = 'md',
   className = '',
 }) => {
-  const isWhite = variant === 'white';
-
-  // Height scaling - calibrated for optimal visibility and legibility of SIGEON logo & subtitle
+  // Calibrated dimensions: "visível mas não tão grande" (clearly readable text without bloating vertical space)
   const logoHeights = {
-    sm: 'h-10 sm:h-12',
-    md: 'h-16 sm:h-[72px]',
-    lg: 'h-20 sm:h-24',
+    sm: 'h-8 sm:h-9 max-h-9',
+    md: 'h-12 sm:h-14 max-h-14',
+    lg: 'h-16 sm:h-18 max-h-18',
   }[size];
 
-  // Use the exact new official SIGEON logo uploaded by the user
+  if (variant === 'semed') {
+    return (
+      <div className={`inline-flex items-center select-none ${className}`}>
+        <img
+          src="/assets/aistudio/001_c3939209.png"
+          alt="Semed - Prefeitura de Manaus"
+          className={`${logoHeights} w-auto object-contain`}
+        />
+      </div>
+    );
+  }
+
+  const isWhite = variant === 'white';
   const logoSrc = isWhite 
     ? '/assets/aistudio/sigeon_logo_white.png'
     : '/assets/aistudio/sigeon_logo_transparent.png';
@@ -32,9 +41,9 @@ export const ManausLogo: React.FC<ManausLogoProps> = ({
       <img
         src={logoSrc}
         alt="SIGEON - Sistema Integrado de Gestão Educacional"
-        className={`${logoHeights} w-auto object-contain transition-transform duration-200 hover:scale-102 ${
+        className={`${logoHeights} w-auto object-contain transition-transform duration-200 hover:scale-[1.02] ${
           isWhite
-            ? 'drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] brightness-105 contrast-105'
+            ? 'drop-shadow-[0_2px_10px_rgba(0,0,0,0.45)]'
             : 'drop-shadow-xs'
         }`}
       />

@@ -16,7 +16,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
 
   const data = {
     alunos: {
-      title: 'Módulo Alunos',
+      title: 'Vida Escolar',
       icon: GraduationCap,
       color: 'bg-sky-600',
       description: 'Gestão completa da trajetória escolar dos estudantes da Rede Municipal de Ensino de Manaus.',
@@ -30,7 +30,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
       authorizedRole: 'Professor(a) Regente ou Gestor(a)',
     },
     servidores: {
-      title: 'Módulo Servidores',
+      title: 'Gestão de Pessoas',
       icon: Users,
       color: 'bg-indigo-600',
       description: 'Administração de pessoal, corpo docente e equipe técnica da Secretaria Municipal de Educação.',
@@ -44,7 +44,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
       authorizedRole: 'Secretário(a) Escolar ou Gestor(a)',
     },
     gestao: {
-      title: 'Módulo Gestão Escolar',
+      title: 'Organização Escolar',
       icon: FileText,
       color: 'bg-blue-600',
       description: 'Ferramentas de governança escolar para diretores, pedagogos e secretários de Manaus.',
@@ -58,7 +58,7 @@ export const ModulePreviewModal: React.FC<ModulePreviewModalProps> = ({
       authorizedRole: 'Gestor(a) Escolar / Diretora',
     },
     relatorios: {
-      title: 'Módulo Relatórios e Indicadores',
+      title: 'Relatórios e Indicadores',
       icon: BarChart3,
       color: 'bg-emerald-600',
       description: 'Painel analítico e transparência de dados educacionais da Prefeitura de Manaus.',
